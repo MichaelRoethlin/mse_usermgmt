@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="mse-moodletest.bussim.ch">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/local/mse_usermgmt" local="$PROJECT_DIR$" web="/local/mse_usermgmt" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
