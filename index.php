@@ -24,15 +24,15 @@
  */
 
 // Include config.php.
-require_once(__DIR__.'/../../config.php');
-require_once($CFG->libdir.'/adminlib.php');
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/adminlib.php');
 
 // Include our function library.
 $pluginname = 'mse_usermgmt';
-require_once($CFG->dirroot.'/local/'.$pluginname.'/locallib.php');
+require_once($CFG->dirroot . '/local/' . $pluginname . '/locallib.php');
 
 // Globals.
-global $CFG, $OUTPUT, $USER, $SITE, $PAGE;
+global $CFG, $OUTPUT, $USER, $SITE, $PAGE, $DB;
 
 // Ensure only administrators have access.
 $homeurl = new moodle_url('/');
@@ -45,25 +45,51 @@ if (!is_siteadmin()) {
 // There are none.
 
 // Include form.
-require_once(dirname(__FILE__).'/classes/'.$pluginname.'_form.php');
+require_once(dirname(__FILE__) . '/classes/' . $pluginname . '_form.php');
 
 // Heading ==========================================================.
 
-$title = get_string('pluginname', 'local_'.$pluginname);
-$heading = get_string('heading', 'local_'.$pluginname);
-$url = new moodle_url('/local/'.$pluginname.'/');
+$title = get_string('pluginname', 'local_' . $pluginname);
+$heading = get_string('heading', 'local_' . $pluginname);
+$url = new moodle_url('/local/' . $pluginname . '/');
 if ($CFG->branch >= 25) { // Moodle 2.5+.
     $context = context_system::instance();
 } else {
     $context = get_system_context();
 }
 
+// Set debug level to a minimum of NORMAL: Show errors, warnings and notices.
+if ($CFG->debug < 15) {
+    $CFG->debug = 15;
+}
+
+$actions = [
+    ['key' => 'home', 'label' => 'Home'],
+    ['key' => 'viewNotusedAccounts', 'label' => 'View all accounts with old logins'],
+    ['key' => 'viewStatusAllOldOSTaccounts', 'label' => 'View all active FHSG, HSR, NTB accounts (old OST)'],
+    ['key' => 'viewStatusAllNewOSTaccounts', 'label' => 'View all active OST accounts'],
+    ['key' => 'viewStatusAllBFHaccounts', 'label' => 'View all active BFH accounts'],
+];
+
+$actionkeys = [];
+$actionlabels = [];
+
+// Transform KV pairs into linear string arrays
+foreach ($actions as $act) {
+    $actionkeys[] = $act['key'];
+    $actionlabels[] = $act['label'];
+}
+
+// An action as per URL GET parameter
+$action = optional_param('action', $actionkeys[0], PARAM_ALPHAEXT);
+$checkedusers = optional_param_array('checkedusers', null, PARAM_RAW);
+
 $PAGE->set_pagelayout('admin');
 $PAGE->set_url($url);
 $PAGE->set_context($context);
 $PAGE->set_title($title);
 $PAGE->set_heading($heading);
-admin_externalpage_setup('local_'.$pluginname); // Sets the navbar & expands navmenu.
+admin_externalpage_setup('local_' . $pluginname); // Sets the navbar & expands navmenu.
 
 // Setup the form.
 
@@ -82,147 +108,52 @@ if (!empty($CFG->emailonlyfromnoreplyaddress) || $CFG->branch >= 32) { // Always
 }
 
 $form = new mse_usermgmt_form(null, array('fromdefault' => $fromdefault));
+
 if ($form->is_cancelled()) {
     redirect($homeurl);
 }
 
 echo $OUTPUT->header();
 
-// Display or process the form. =====================================.
+$msg = '';
 
-$data = $form->get_data();
-
-if (!$data) { // Display the form.
-
-    echo $OUTPUT->heading($heading);
-
-    // Display a warning if Cron hasn't run in a while. =============.
-    if ($CFG->branch >= 27) { // Moodle 2.7+.
-        $sql = 'SELECT MAX(lastruntime) FROM {task_scheduled}';
-    } else {
-        $sql = 'SELECT MAX(lastcron) FROM {modules}';
-    }
-    $cronlastrun = $DB->get_field_sql($sql);
-    if ($cronlastrun <= time() - 3600 * 24) { // Cron is overdue.
-        $msg = '';
-        $msg .= '<button type="button" class="close" data-dismiss="alert">×</button>';
-        $msg .= '<p>';
-        $msg .= '<strong>' . get_string('warning') . '</strong> - ';
-        if (empty($CFG->cronclionly)) {
-            // Determine build link to run cron.
-            $cronurl = new moodle_url('/admin/cron.php');
-            if (!empty($CFG->cronremotepassword)) {
-                $cronurl = new moodle_url('/admin/cron.php', array('password' => $CFG->cronremotepassword));
-            }
-            $msg .= get_string('cronwarning', 'admin', $cronurl->out());
-        } else {
-            $msg .= get_string('cronwarningcli', 'admin');
+switch ($action) {
+    // Home: list all possible actions
+    case $actionkeys[0]:
+        for ($a = 1, $aMax = count($actions); $a < $aMax; $a++) {
+            local_mse_usermgmt_msgbox($actionlabels[$a] . ' [' . $actionkeys[$a] . ']', $heading = null, $level = 1,
+                'alert alert-warning alert-block fade in',
+                $link = '?action=' . $actionkeys[$a], $id = $actionkeys[$a]);
         }
-        $msg .= '</p>';
-        $msg .= '<p>' . get_string('cron_help', 'admin');
-        if (!empty($CFG->branch)) {
-            $icon = $OUTPUT->pix_icon('help', get_string('moreinfo'));
-            $link = $CFG->docroot . '/' . $CFG->branch . '/' . substr(current_language(), 0, 2) . '/Cron';
-            $msg .= html_writer::link($link, $icon, array('class' => 'helplink', 'target' => '_blank', 'rel' => 'external'));
+        break;
+    case $actionkeys[1]:
+        $newTimestamp = strtotime('-2 years', time());
+        $msg = get_user_list_with_last_login_before($newTimestamp);
+        break;
+    case $actionkeys[2]:
+        $msg = get_user_list_from_identity(['fhsg.ch', 'hsr.ch', 'ntb.ch']);
+        break;
+    case $actionkeys[3]:
+        $msg = get_user_list_from_identity(['ost.ch']);
+        break;
+    case $actionkeys[4]:
+        $msg = get_user_list_from_identity(['bfh.ch']);
+        break;
+    case 'deleteusers':
+        if (isset($checkedusers)) {
+            set_users_inactive($checkedusers);
         }
-        $msg .= '</p>';
-        local_mse_usermgmt_msgbox($msg, null, 3, 'alert alert-danger alert-block fade in');
-    }
+        break;
+    default:
+        local_mse_usermgmt_msgbox('Cannot handle action: ' . $action, 'Error', 3, 'alert alert-warning alert-block fade in');
+        phpinfo();
+        break;
+}
 
-    // Display the form. ============================================.
-    $form->display();
-
-} else {      // Send test email.
-    if (!isset($data->sender)) {
-        $data->sender = $CFG->noreplyaddress;
-    }
-    $fromemail = local_mse_usermgmt_generate_email_user($data->sender);
-
-    if ($CFG->branch >= 26) {
-        $toemail = core_text::strtolower($data->recipient);
-    } else {
-        $toemail = textlib::strtolower($data->recipient);
-    }
-    if ($toemail !== clean_param($toemail, PARAM_EMAIL)) {
-        local_mse_usermgmt_msgbox(get_string('invalidemail'), get_string('error'), 2, 'errorbox', $url);
-    }
-    $toemail = local_mse_usermgmt_generate_email_user($toemail, '');
-
-    $subject = format_string($SITE->fullname);
-
-    // Add some system information.
-    $a = new stdClass();
-    if (isloggedin()) {
-        $a->regstatus = get_string('registered', 'local_'.$pluginname, $USER->username);
-    } else {
-        $a->regstatus = get_string('notregistered', 'local_'.$pluginname);
-    }
-    $a->lang = current_language();
-    $a->browser = $_SERVER['HTTP_USER_AGENT'];
-    $a->referer = $_SERVER['HTTP_REFERER'];
-    $a->release = $CFG->release;
-    $a->ip = local_mse_usermgmt_getuserip();
-    $messagehtml = get_string('message', 'local_'.$pluginname, $a);
-    $messagetext = html_to_text($messagehtml);
-
-    // Manage Moodle SMTP debugging display.
-    $debuglevel = $CFG->debug;
-    $debugdisplay = $CFG->debugdisplay;
-    $debugsmtp = isset($CFG->debugsmtp) && $CFG->debugsmtp;
-    $showlog = !empty($data->alwaysshowlog) || ($debugdisplay && $debugsmtp);
-    // Set debug level to a minimum of NORMAL: Show errors, warnings and notices.
-    if ($CFG->debug < 15) {
-        $CFG->debug = 15;
-    }
-    $CFG->debugdisplay = true;
-    $CFG->debugsmtp = true;
-    if (empty($CFG->smtphosts)) {
-        $success = email_to_user($toemail, $fromemail, $subject, $messagetext, $messagehtml, '', '', true, $fromemail->email);
-        $smtplog = get_string('nologavailable', 'local_'.$pluginname);
-    } else {
-        ob_start();
-        $success = email_to_user($toemail, $fromemail, $subject, $messagetext, $messagehtml, '', '', true, $fromemail->email);
-        $smtplog = ob_get_contents();
-        ob_end_clean();
-    }
-    $CFG->debug = $debuglevel;
-    $CFG->debugdisplay = $debugdisplay;
-    $CFG->debugsmtp = $debugsmtp;
-
-    if ($success) { // Success.
-        if ($showlog) {
-            // Display debugging info if settings were already on before the test or user wants to force display.
-            echo $smtplog;
-        }
-        if (empty($CFG->smtphosts)) {
-            $msg = get_string('sentmailphp', 'local_'.$pluginname);
-        } else {
-            $msg = get_string('sentmail', 'local_'.$pluginname);
-        }
-        $msg .= '<br><br>' . get_string('from') . ' : ' . $fromemail->email . '<br>' . get_string('to') . ' : '. $toemail->email;
-
-        local_mse_usermgmt_msgbox($msg, get_string('success'), 2, 'infobox', $url);
-
-    } else { // Failed to deliver message to the SMTP mail server.
-
-        if (trim($smtplog) == false) { // No communication between Moodle and the SMTP server.
-            $errstring = 'errorcommunications';
-        } else { // SMTP mail server refused the email.
-            $errstring = 'errorsend';
-            // Display the results of the dialogue between Moodle and the SMTP server.
-            echo $smtplog;
-        }
-
-        if ($CFG->branch >= 32) {
-            $msg = get_string($errstring, 'local_'.$pluginname, '../../admin/settings.php?section=outgoingmailconfig');
-        } else {
-            $msg = get_string($errstring, 'local_'.$pluginname, '../../admin/settings.php?section=messagesettingemail');
-        }
-        $msg .= '<br><br>' . get_string('from') . ' : ' . $fromemail->email . '<br>' . get_string('to') . ' : '. $toemail->email;
-
-        local_mse_usermgmt_msgbox($msg, get_string('emailfail', 'error'), 2, 'errorbox', $url);
-
-    }
+if (trim($msg)) {
+    local_mse_usermgmt_msgbox($msg, 'Result', 3, 'alert alert-warning alert-block fade in');
+    //    local_mse_usermgmt_msgbox($actionlabels[0], $heading = null, $level = 1, 'alert alert-success alert-block fade in',
+    //        $link = '?action=' . $actionkeys[0], $id = $actionkeys[0]);
 }
 
 // Footing  =========================================================.

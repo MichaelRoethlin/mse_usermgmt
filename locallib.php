@@ -24,13 +24,22 @@
  */
 
 defined('MOODLE_INTERNAL') || die;
+define('STANDARD_USERLIST',
+    "u.email,
+    u.username,
+    u.suspended,
+    u.id,
+    u.lastname,
+    u.firstname,
+    DATE_FORMAT(FROM_UNIXTIME(u.lastaccess), '%Y-%m-%d %h:%i:%s') as lastaccess,
+    DATE_FORMAT(FROM_UNIXTIME(u.firstaccess), '%Y-%m-%d %h:%i:%s') as firstaccess");
 
 /**
  * Generate a user info object based on provided parameters.
  *
- * @param      string  $email  plain text email address.
- * @param      string  $name   (optional) plain text real name.
- * @param      int     $id     (optional) user ID
+ * @param string $email plain text email address.
+ * @param string $name (optional) plain text real name.
+ * @param int $id (optional) user ID
  *
  * @return     object  user info.
  */
@@ -56,27 +65,27 @@ function local_mse_usermgmt_generate_email_user($email, $name = '', $id = -99) {
 /**
  * Outputs a message box.
  *
- * @param      string  $text     The text of the message.
- * @param      string  $heading  (optional) The text of the heading.
- * @param      int     $level    (optional) The level of importance of the
+ * @param string $text The text of the message.
+ * @param string $heading (optional) The text of the heading.
+ * @param int $level (optional) The level of importance of the
  *                               heading. Default: 2.
- * @param      string  $classes  (optional) A space-separated list of CSS
+ * @param string $classes (optional) A space-separated list of CSS
  *                               classes.
- * @param      string  $link     (optional) The link where you want the Continue
+ * @param string $link (optional) The link where you want the Continue
  *                               button to take the user. Only displays the
  *                               continue button if the link URL was specified.
- * @param      string  $id       (optional) An optional ID. Is applied to body
+ * @param string $id (optional) An optional ID. Is applied to body
  *                               instead of heading if no heading.
  * @return     string  the HTML to output.
  */
 function local_mse_usermgmt_msgbox($text, $heading = null, $level = 2, $classes = null, $link = null, $id = null) {
     global $OUTPUT;
-    echo $OUTPUT->box_start(trim('box '.$classes));
+    echo $OUTPUT->box_start(trim('box ' . $classes));
     if (!is_null($heading)) {
         echo $OUTPUT->heading($heading, $level, $id);
-        echo "<p>$text</p>".PHP_EOL;
+        echo "<p>$text</p>" . PHP_EOL;
     } else {
-        echo "<p id=\"$id\">$text</p>".PHP_EOL;
+        echo "<p id=\"$id\">$text</p>" . PHP_EOL;
     }
     if (!is_null($link)) {
         echo $OUTPUT->continue_button($link);
@@ -91,7 +100,7 @@ function local_mse_usermgmt_msgbox($text, $heading = null, $level = 2, $classes 
  */
 function local_mse_usermgmt_getuserip() {
     $fieldlist = array('HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED',
-            'REMOTE_ADDR', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_CLUSTER_CLIENT_IP');
+        'REMOTE_ADDR', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_CLUSTER_CLIENT_IP');
 
     // Public range first.
     $filterlist = array(
@@ -121,11 +130,152 @@ function local_mse_usermgmt_getuserip() {
                 $lastip = $ip; // But save other address just in case.
                 $ip = filter_var(trim($ip), FILTER_VALIDATE_IP, $filter);
                 if ($ip !== false) {
-                    return($ip);
+                    return ($ip);
                 }
             }
         }
     }
     // Private or restricted range.
     return $lastip;
+}
+
+/**
+ * This function returns the HTML table for an array with users
+ *
+ * @param $users
+ * @param bool $formcheckbox
+ * @param string $formtarget
+ * @return string
+ */
+function arrayToHTML($users, $formcheckbox = false, $formtarget = '') {
+    $msg = '';
+
+    if (false) {
+        echo '<pre>';
+        print_r($users);
+        die();
+    }
+
+    if ($formcheckbox) {
+        $msg .= '<form method="post" action="' . $formtarget . '">';
+    }
+
+    $keys = [];
+    foreach ($users as $email => $user) {
+        if (empty($keys)) {
+            $keys = array_keys((array) $user);
+            break;
+        }
+    }
+
+    $msg .= '
+<table>
+<tbody>
+<tr>' . PHP_EOL;
+
+    if ($formcheckbox) {
+        $msg .= '<th>';
+    }
+
+    foreach ($keys as $key) {
+        $msg .= '<th>' . (($key !== 'id') ? get_string($key) : 'ID') . '</th>' . PHP_EOL;
+    }
+
+    $msg .= '</tr>';
+
+    foreach ($users as $email => $user) {
+        $msg .= '<tr>' . PHP_EOL;
+        if ($formcheckbox) {
+            $msg .= '<td width="20"><input type="checkbox" id="' . $user->id . '" value="' . $user->id .
+                '" name="checkedusers[]" checked="checked"></td>';
+        }
+
+        foreach ($keys as $key) {
+            $msg .= '<td>' . $user->{$key} . '</td>' . PHP_EOL;
+        }
+        $msg .= '</tr>' . PHP_EOL;
+    }
+
+    $msg .=
+        '</tbody>
+</table>';
+
+    if ($formcheckbox) {
+        $msg .= '<br/><p align="center"><button type="submit" class="btn btn-danger" name="save">Suspend Users</button>';
+        $msg .= '&nbsp;<a href="?action=home" class="btn btn-info" role="button">Cancel</a>';
+        $msg .= '</form>';
+    }
+
+    return $msg;
+}
+
+/**
+ * Get the list of all users belonging to certain identities
+ *
+ * @param $identities Array of xyz.ch AAI identities
+ * @return string
+ */
+function get_user_list_from_identity($identities) {
+    global $DB;
+
+    if (count($identities) === 0) {
+        return '';
+    }
+
+    $userlike = "u.username LIKE '%@" . $identities[0] . "'";
+
+    if (count($identities) > 1) {
+        for ($i = 1, $iMax = count($identities); $i < $iMax; $i++) {
+            $userlike .= " or u.username LIKE '%@" . $identities[$i] . "' ";
+        }
+    }
+
+    $sql = "
+    SELECT " . STANDARD_USERLIST . "
+    FROM mdl_user as u
+    WHERE u.suspended = 0 and (" . $userlike . ") and u.emailstop = 0
+    ORDER BY u.lastname,u.firstname ASC
+";
+
+    $users = $DB->get_records_sql($sql);
+    return arrayToHTML($users);
+}
+
+/**
+ * Get the list of all users having logged in the last time before a given time
+ *
+ * @param $cutofftime
+ * @return string
+ */
+function get_user_list_with_last_login_before($cutofftime) {
+    global $DB;
+
+    $sql = "
+    SELECT " . STANDARD_USERLIST . "
+    FROM mdl_user as u
+    WHERE u.suspended = 0 AND u.deleted = 0 AND (u.lastaccess < " . $cutofftime . ")
+    ORDER BY u.lastaccess DESC
+";
+
+    $users = $DB->get_records_sql($sql);
+    return arrayToHTML($users, true, '?action=deleteusers');
+}
+
+/**
+ * Set a number of user accounts to a given state
+ *
+ * @param $userlist
+ */
+function set_users_inactive($userlist) {
+    global $DB, $USER;
+
+    foreach ($userlist as $us) {
+        $user = $DB->get_record('user', ['id' => $us]);
+        $user->suspended = 1;
+        $user->description .= '<br />Deactivated by script MSE User Management by user ' . $USER->username . ' on ' .
+            date('l jS \of F Y h:i:s A');
+        $DB->update_record('user', $user, $bulk = false);
+    }
+
+    redirect('?action=home', 'Done: '.count($userlist).' users suspended', 3);
 }

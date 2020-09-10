@@ -1,7 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="BRANCH:origin/master" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </select>
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="9ca50483-403c-48ca-b462-b944c0b5a3df" name="Default Changelist" comment="" />
+    <list default="true" id="9ca50483-403c-48ca-b462-b944c0b5a3df" name="Default Changelist" comment="Initial commit.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/index.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/locallib.php" beforeDir="false" afterPath="$PROJECT_DIR$/locallib.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/version.php" beforeDir="false" afterPath="$PROJECT_DIR$/version.php" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -18,14 +48,23 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="ProjectId" id="1gySnSjrYYSOwrAzHqWeqYXt2bL" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="WebServerToolWindowPanel.toolwindow.highlight.mappings" value="true" />
+    <property name="WebServerToolWindowPanel.toolwindow.highlight.symlinks" value="true" />
+    <property name="WebServerToolWindowPanel.toolwindow.show.date" value="false" />
+    <property name="WebServerToolWindowPanel.toolwindow.show.permissions" value="false" />
+    <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -38,7 +77,6 @@
     <property name="options.splitter.details.proportions" value="0.2" />
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
-    <property name="settings.editor.splitter.proportion" value="0.2" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -50,33 +88,103 @@
       <option name="presentableId" value="Default" />
       <updated>1599085505565</updated>
       <workItem from="1599085506663" duration="564000" />
-      <workItem from="1599113643189" duration="248000" />
+      <workItem from="1599113643189" duration="14719000" />
+      <workItem from="1599634701465" duration="396000" />
+      <workItem from="1599635108950" duration="652000" />
     </task>
+    <task id="LOCAL-00001" summary="Initial commit.">
+      <created>1599120414252</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1599120414252</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Initial commit." />
+    <option name="LAST_COMMIT_MESSAGE" value="Initial commit." />
+  </component>
   <component name="WindowStateProjectService">
-    <state x="643" y="253" width="1246" height="669" key="#Deployment" timestamp="1599086200635">
-      <screen x="39" y="23" width="2009" height="1129" />
+    <state x="643" y="253" width="1246" height="669" key="#Deployment" timestamp="1599121559633">
+      <screen x="38" y="23" width="2010" height="1129" />
     </state>
-    <state x="643" y="253" width="1246" height="669" key="#Deployment/39.23.2009.1129@39.23.2009.1129" timestamp="1599086200635" />
+    <state x="643" y="253" key="#Deployment/38.23.2010.1129@38.23.2010.1129" timestamp="1599121559633" />
+    <state x="643" y="253" width="1246" height="669" key="#Deployment/39.23.2009.1129@39.23.2009.1129" timestamp="1599121276773" />
     <state x="789" y="418" key="#Notifications" timestamp="1599120234163">
       <screen x="39" y="23" width="2009" height="1129" />
     </state>
     <state x="789" y="418" key="#Notifications/39.23.2009.1129@39.23.2009.1129" timestamp="1599120234163" />
-    <state x="139" y="123" width="1809" height="929" key="DiffContextDialog" timestamp="1599086231069">
+    <state x="516" y="438" key="#SQL_Resolution_Scopes" timestamp="1599122552917">
+      <screen x="38" y="23" width="2010" height="1129" />
+    </state>
+    <state x="516" y="438" key="#SQL_Resolution_Scopes/38.23.2010.1129@38.23.2010.1129" timestamp="1599122552917" />
+    <state x="850" y="240" key="#SSH_Configurations" timestamp="1599121528711">
+      <screen x="38" y="23" width="2010" height="1129" />
+    </state>
+    <state x="850" y="240" key="#SSH_Configurations/38.23.2010.1129@38.23.2010.1129" timestamp="1599121528711" />
+    <state x="199" y="123" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1599149082650">
+      <screen x="34" y="23" width="1406" height="877" />
+    </state>
+    <state x="199" y="123" key="#com.intellij.execution.impl.EditConfigurationsDialog/34.23.1406.877@34.23.1406.877" timestamp="1599149082650" />
+    <state x="104" y="101" width="1267" height="722" key="DiffContextDialog" timestamp="1599151139840">
+      <screen x="34" y="23" width="1406" height="877" />
+    </state>
+    <state x="104" y="101" width="1267" height="722" key="DiffContextDialog/34.23.1406.877@34.23.1406.877" timestamp="1599151139840" />
+    <state x="138" y="123" width="1810" height="929" key="DiffContextDialog/38.23.2010.1129@38.23.2010.1129" timestamp="1599121600630" />
+    <state x="139" y="123" width="1809" height="929" key="DiffContextDialog/39.23.2009.1129@39.23.2009.1129" timestamp="1599086231069" />
+    <state x="554" y="226" key="SettingsEditor" timestamp="1599635092339">
+      <screen x="42" y="23" width="2006" height="1129" />
+    </state>
+    <state x="554" y="226" key="SettingsEditor/42.23.2006.1129@42.23.2006.1129" timestamp="1599635092339" />
+    <state x="643" y="327" key="Vcs.Push.Dialog.v2" timestamp="1599120417390">
       <screen x="39" y="23" width="2009" height="1129" />
     </state>
-    <state x="139" y="123" width="1809" height="929" key="DiffContextDialog/39.23.2009.1129@39.23.2009.1129" timestamp="1599086231069" />
+    <state x="643" y="327" key="Vcs.Push.Dialog.v2/39.23.2009.1129@39.23.2009.1129" timestamp="1599120417390" />
     <state x="750" y="342" width="586" height="548" key="find.popup" timestamp="1599085579939">
       <screen x="39" y="23" width="2009" height="1129" />
     </state>
     <state x="750" y="342" width="586" height="548" key="find.popup/39.23.2009.1129@39.23.2009.1129" timestamp="1599085579939" />
-    <state x="1173" y="325" key="ftp.server.browser" timestamp="1599086192625">
+    <state x="1173" y="325" key="ftp.server.browser" timestamp="1599121554427">
+      <screen x="38" y="23" width="2010" height="1129" />
+    </state>
+    <state x="1173" y="325" key="ftp.server.browser/38.23.2010.1129@38.23.2010.1129" timestamp="1599121554427" />
+    <state x="1173" y="325" key="ftp.server.browser/39.23.2009.1129@39.23.2009.1129" timestamp="1599121267991" />
+    <state x="865" y="488" key="git4idea.remote.GitConfigureRemotesDialog" timestamp="1599120352857">
       <screen x="39" y="23" width="2009" height="1129" />
     </state>
-    <state x="1173" y="325" key="ftp.server.browser/39.23.2009.1129@39.23.2009.1129" timestamp="1599086192625" />
+    <state x="865" y="488" key="git4idea.remote.GitConfigureRemotesDialog/39.23.2009.1129@39.23.2009.1129" timestamp="1599120352857" />
+    <state x="708" y="274" key="run.anything.popup" timestamp="1599121578351">
+      <screen x="38" y="23" width="2010" height="1129" />
+    </state>
+    <state x="708" y="274" key="run.anything.popup/38.23.2010.1129@38.23.2010.1129" timestamp="1599121578351" />
   </component>
 </project>
