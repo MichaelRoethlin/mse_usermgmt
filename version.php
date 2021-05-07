@@ -26,8 +26,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_mse_usermgmt';  // To check on upgrade, that module sits in correct place
-$plugin->version   = 2020090303;        // The current module version (Date: YYYYMMDDXX)
+$plugin->version   = 2020091011;        // The current module version (Date: YYYYMMDDXX)
 $plugin->requires  = 2013040500;        // Requires Moodle version 2.5.
-$plugin->release   = '1.0.0 (2020090300)';
+$plugin->release   = '1.1.0 (2020090300)';
 $plugin->maturity  = MATURITY_STABLE;
 $plugin->cron      = 0;

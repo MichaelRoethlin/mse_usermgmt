@@ -34,6 +34,8 @@ require_once($CFG->dirroot . '/local/' . $pluginname . '/locallib.php');
 // Globals.
 global $CFG, $OUTPUT, $USER, $SITE, $PAGE, $DB;
 
+define('CODEWORD', 'doit');
+
 // Ensure only administrators have access.
 $homeurl = new moodle_url('/');
 require_login();
@@ -65,9 +67,11 @@ if ($CFG->debug < 15) {
 
 $actions = [
     ['key' => 'home', 'label' => 'Home'],
-    ['key' => 'viewNotusedAccounts', 'label' => 'View all accounts with old logins'],
+    ['key' => 'viewNotusedAccounts', 'label' => 'View (and update) all accounts with old logins'],
     ['key' => 'viewStatusAllOldOSTaccounts', 'label' => 'View all active FHSG, HSR, NTB accounts (old OST)'],
     ['key' => 'viewStatusAllNewOSTaccounts', 'label' => 'View all active OST accounts'],
+    ['key' => 'viewStatusUpdateToOSTaccounts', 'label' => 'Update ALL active old FHSG, HSR and NTB accounts to OST'],
+    ['key' => 'viewStatusUpdateToOSTaccountsSNG', 'label' => 'Update SINGLE active old FHSG, HSR and NTB accounts to OST'],
     ['key' => 'viewStatusAllBFHaccounts', 'label' => 'View all active BFH accounts'],
 ];
 
@@ -82,6 +86,7 @@ foreach ($actions as $act) {
 
 // An action as per URL GET parameter
 $action = optional_param('action', $actionkeys[0], PARAM_ALPHAEXT);
+$confirmation = optional_param('confirmation', '1234', PARAM_ALPHAEXT);
 $checkedusers = optional_param_array('checkedusers', null, PARAM_RAW);
 
 $PAGE->set_pagelayout('admin');
@@ -137,11 +142,26 @@ switch ($action) {
         $msg = get_user_list_from_identity(['ost.ch']);
         break;
     case $actionkeys[4]:
+        $msg = get_user_list_from_identity(['fhsg.ch', 'hsr.ch', 'ntb.ch'], true, '?action=updateOldOSTusers',true);
+        break;
+    case $actionkeys[5]:
+        $msg = get_user_list_from_identity(['fhsg.ch', 'hsr.ch', 'ntb.ch'], true, '?action=updateOldOSTusers',false);
+        break;
+    case $actionkeys[6]:
         $msg = get_user_list_from_identity(['bfh.ch']);
         break;
-    case 'deleteusers':
+    case 'updateOldOSTusers':
         if (isset($checkedusers)) {
+            set_users_to_ost($checkedusers, ($confirmation === CODEWORD));
+        } else {
+            print_error('Illegal parameters');
+        }
+        break;
+    case 'deleteusers':
+        if (isset($checkedusers) && ($confirmation === CODEWORD)) {
             set_users_inactive($checkedusers);
+        } else {
+            print_error('Illegal parameters');
         }
         break;
     default:

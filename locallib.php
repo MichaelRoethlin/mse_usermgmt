@@ -147,7 +147,7 @@ function local_mse_usermgmt_getuserip() {
  * @param string $formtarget
  * @return string
  */
-function arrayToHTML($users, $formcheckbox = false, $formtarget = '') {
+function arrayToHTML($users, $formcheckbox = false, $formtarget = '', $fill = true) {
     $msg = '';
 
     if (false) {
@@ -186,8 +186,13 @@ function arrayToHTML($users, $formcheckbox = false, $formtarget = '') {
     foreach ($users as $email => $user) {
         $msg .= '<tr>' . PHP_EOL;
         if ($formcheckbox) {
-            $msg .= '<td width="20"><input type="checkbox" id="' . $user->id . '" value="' . $user->id .
-                '" name="checkedusers[]" checked="checked"></td>';
+            if ($fill) {
+                $msg .= '<td width="20"><input type="checkbox" id="' . $user->id . '" value="' . $user->id .
+                    '" name="checkedusers[]" checked="checked"></td>';
+            } else {
+                $msg .= '<td width="20"><input type="checkbox" id="' . $user->id . '" value="' . $user->id .
+                    '" name="checkedusers[]" ></td>';
+            }
         }
 
         foreach ($keys as $key) {
@@ -201,8 +206,9 @@ function arrayToHTML($users, $formcheckbox = false, $formtarget = '') {
 </table>';
 
     if ($formcheckbox) {
-        $msg .= '<br/><p align="center"><button type="submit" class="btn btn-danger" name="save">Suspend Users</button>';
-        $msg .= '&nbsp;<a href="?action=home" class="btn btn-info" role="button">Cancel</a>';
+        $msg .= '<br/><p align="center">Confirmation key: <input type="text" name="confirmation"></inputbutton></p>';
+        $msg .= '<br/><p align="center"><button type="submit" class="btn btn-danger" name="save">Update Users</button>';
+        $msg .= '&nbsp;<a href="?action=home" class="btn btn-info" role="button">Cancel</a></p>';
         $msg .= '</form>';
     }
 
@@ -213,9 +219,11 @@ function arrayToHTML($users, $formcheckbox = false, $formtarget = '') {
  * Get the list of all users belonging to certain identities
  *
  * @param $identities Array of xyz.ch AAI identities
+ * @param null $formcheckbox
+ * @param null $formtarget
  * @return string
  */
-function get_user_list_from_identity($identities) {
+function get_user_list_from_identity($identities, $formcheckbox = null, $formtarget = null, $fill = true) {
     global $DB;
 
     if (count($identities) === 0) {
@@ -238,7 +246,7 @@ function get_user_list_from_identity($identities) {
 ";
 
     $users = $DB->get_records_sql($sql);
-    return arrayToHTML($users);
+    return arrayToHTML($users, $formcheckbox, $formtarget, $fill);
 }
 
 /**
@@ -277,5 +285,109 @@ function set_users_inactive($userlist) {
         $DB->update_record('user', $user, $bulk = false);
     }
 
-    redirect('?action=home', 'Done: '.count($userlist).' users suspended', 3);
+    redirect('?action=home', 'Done: ' . count($userlist) . ' users suspended', 3);
+}
+
+/**
+ * Set a number of user accounts to a given state
+ *
+ * @param $userlist List of users to be processed
+ * @param bool $reallydoit Execute the DB updates
+ */
+function set_users_to_ost($userlist, $reallydoit = false) {
+    global $DB, $USER;
+
+    $stratresults = [];
+    $stratresults[0] = 0;
+    $stratresults[1] = 0;
+    $stratresults[2] = 0;
+    $stratresults[3] = 0;
+    $stratresults[4] = 0;
+
+    if (!$reallydoit) {
+        echo '<h3>Dry run only</h3>';
+    } else {
+        echo '<h3>Success</h3>';
+    }
+
+    foreach ($userlist as $us) {
+        $olduser = $DB->get_record('user', ['id' => $us]);
+        $oldusername = $olduser->username;
+        $oldusercourses = null;
+        $newusercourses = null;
+        $newusername = null;
+        $newuser = null;
+
+        $parts = explode('@', $oldusername);
+
+        if (count($parts) > 1) {
+            $newusername = $parts[0] . '@ost.ch';
+            $newuser = $DB->get_record('user', ['username' => $newusername]);
+            if ($newuser) {
+                $newusercourses = count(enrol_get_all_users_courses($newuser->id, true, null, 'visible DESC, sortorder ASC'));
+            }
+        }
+
+        $oldusercourses = count(enrol_get_all_users_courses($olduser->id, true, null, 'visible DESC, sortorder ASC'));
+
+        $updated_text =
+            '<br />Updated for FHSG/HSR/NTB to OST Migration by script  MSE User Management by user ' . $USER->username . ' on ' .
+            date('l jS \of F Y h:i:s A');
+
+        if (!$newuser) {
+            $result = 'Strategy 1: Replace old by new username in existing user record, as no @ost.ch user record exists';
+
+            if ($reallydoit) {
+                $olduser->username = $newusername;
+                $olduser->description .= $updated_text;
+                $DB->update_record('user', $olduser, $bulk = false);
+            }
+
+            $stratresults[1]++;
+        } else if ($newusercourses === 0) {
+            $result =
+                'Strategy 2: Desactivate new @ost.ch user record as no courses are linked, then replace old by new username in existing user record';
+
+            if ($reallydoit) {
+                // First rename the new (and not to be used) user record
+                $newuser->username = 'migr-' . $newuser->username;
+                $newuser->email = 'migr-' . $newuser->email;
+                $newuser->firstname = 'INVALID ACCOUNT: ' . $newuser->firstname;
+                $newuser->suspended = 1;
+                $DB->update_record('user', $newuser, $bulk = false);
+
+                // Then update the old (and to be used new) user record
+                $olduser->username = $newusername;
+                $olduser->description .= $updated_text;
+                $DB->update_record('user', $olduser, $bulk = false);
+            }
+
+            $stratresults[2]++;
+        } else if (($oldusercourses === 0) && ($newusercourses > 0)) {
+            $result = 'Strategy 3: Deactivate old non- @ost.ch user record as no courses are linked';
+
+            if ($reallydoit) {
+                // Simply deactivate the old (and not to be used) user record
+                $olduser->suspended = 1;
+                $olduser->firstname = 'INVALID ACCOUNT: ' . $olduser->firstname;
+                $DB->update_record('user', $olduser, $bulk = false);
+            }
+
+            $stratresults[3]++;
+        } else {
+            $result = 'Strategy 4: Manually merge accounts ...';
+            $stratresults[4]++;
+        }
+
+        echo 'User ' . $oldusername . ' (' . $olduser->email . '): <br /> - ' . $result . '<br />';
+
+    }
+
+    redirect('?action=home',
+        'Done: ' . count($userlist) . ' users checked, strategies' .
+        ' 1: ' . $stratresults[1] .
+        ', 2: ' . $stratresults[2] .
+        ', 3: ' . $stratresults[3] .
+        ', 4: ' . $stratresults[4],
+        60);
 }
