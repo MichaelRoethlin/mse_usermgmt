@@ -15,24 +15,23 @@
 // along with MailTest.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Library of functions for MailTest.
+ * Library of functions for MSE User Management.
  *
  * @package    local_mse_usermgmt
- * @copyright  2015-2018 TNG Consulting Inc. - www.tngconsulting.ca
- * @author     Michael Milette
+ * @copyright  2021 BFH-TI
+ * @author     Michael Röthlin
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
-define('STANDARD_USERLIST',
-    "u.email,
+const STANDARD_USERLIST = "u.email,
     u.username,
     u.suspended,
     u.id,
     u.lastname,
     u.firstname,
     DATE_FORMAT(FROM_UNIXTIME(u.lastaccess), '%Y-%m-%d %h:%i:%s') as lastaccess,
-    DATE_FORMAT(FROM_UNIXTIME(u.firstaccess), '%Y-%m-%d %h:%i:%s') as firstaccess");
+    DATE_FORMAT(FROM_UNIXTIME(u.firstaccess), '%Y-%m-%d %h:%i:%s') as firstaccess";
 
 /**
  * Generate a user info object based on provided parameters.
@@ -43,7 +42,7 @@ define('STANDARD_USERLIST',
  *
  * @return     object  user info.
  */
-function local_mse_usermgmt_generate_email_user($email, $name = '', $id = -99) {
+function local_mse_usermgmt_generate_email_user(string $email, string $name = '', int $id = -99) {
     $emailuser = new stdClass();
     $emailuser->email = trim(filter_var($email, FILTER_SANITIZE_EMAIL));
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -66,19 +65,20 @@ function local_mse_usermgmt_generate_email_user($email, $name = '', $id = -99) {
  * Outputs a message box.
  *
  * @param string $text The text of the message.
- * @param string $heading (optional) The text of the heading.
+ * @param string|null $heading (optional) The text of the heading.
  * @param int $level (optional) The level of importance of the
  *                               heading. Default: 2.
- * @param string $classes (optional) A space-separated list of CSS
+ * @param string|null $classes (optional) A space-separated list of CSS
  *                               classes.
- * @param string $link (optional) The link where you want the Continue
+ * @param string|null $link (optional) The link where you want the Continue
  *                               button to take the user. Only displays the
  *                               continue button if the link URL was specified.
- * @param string $id (optional) An optional ID. Is applied to body
+ * @param string|null $id (optional) An optional ID. Is applied to body
  *                               instead of heading if no heading.
  * @return     string  the HTML to output.
  */
-function local_mse_usermgmt_msgbox($text, $heading = null, $level = 2, $classes = null, $link = null, $id = null) {
+function local_mse_usermgmt_msgbox(string $text, string $heading = null, int $level = 2, string $classes = null,
+    string $link = null, string $id = null): string {
     global $OUTPUT;
     echo $OUTPUT->box_start(trim('box ' . $classes));
     if (!is_null($heading)) {
@@ -98,7 +98,7 @@ function local_mse_usermgmt_msgbox($text, $heading = null, $level = 2, $classes 
  *
  * @return     string  Public IP address or the private IP address if the public address cannot be identified.
  */
-function local_mse_usermgmt_getuserip() {
+function local_mse_usermgmt_getuserip(): string {
     $fieldlist = array('HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED',
         'REMOTE_ADDR', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_CLUSTER_CLIENT_IP');
 
@@ -119,10 +119,10 @@ function local_mse_usermgmt_getuserip() {
             foreach ($iplist as $ip) {
 
                 // Strips off port number if it exists.
-                if (substr_count($ip, ':') == 1) {
+                if (substr_count($ip, ':') === 1) {
                     // IPv4 with a port.
                     list($ip) = explode(':', $ip);
-                } else if ($start = (substr($ip, 0, 1) == '[') && $end = strpos($ip, ']:') !== false) {
+                } else if ($start = (($ip[0] === '[') && $end = strpos($ip, ']:') !== false)) {
                     // IPv6 with a port.
                     $ip = substr($ip, $start + 1, $end - 2);
                 }
@@ -147,7 +147,7 @@ function local_mse_usermgmt_getuserip() {
  * @param string $formtarget
  * @return string
  */
-function arrayToHTML($users, $formcheckbox = false, $formtarget = '', $fill = true) {
+function arrayToHTML($users, bool $formcheckbox = false, string $formtarget = '', $fill = true): string {
     $msg = '';
 
     if (false) {
@@ -221,9 +221,10 @@ function arrayToHTML($users, $formcheckbox = false, $formtarget = '', $fill = tr
  * @param $identities Array of xyz.ch AAI identities
  * @param null $formcheckbox
  * @param null $formtarget
+ * @param bool $fill
  * @return string
  */
-function get_user_list_from_identity($identities, $formcheckbox = null, $formtarget = null, $fill = true) {
+function get_user_list_from_identity(array $identities, $formcheckbox = null, $formtarget = null, $fill = true): string {
     global $DB;
 
     if (count($identities) === 0) {
@@ -282,7 +283,7 @@ function set_users_inactive($userlist) {
         $user->suspended = 1;
         $user->description .= '<br />Deactivated by script MSE User Management by user ' . $USER->username . ' on ' .
             date('l jS \of F Y h:i:s A');
-        $DB->update_record('user', $user, $bulk = false);
+        $DB->update_record('user', $user, false);
     }
 
     redirect('?action=home', 'Done: ' . count($userlist) . ' users suspended', 3);
@@ -291,10 +292,10 @@ function set_users_inactive($userlist) {
 /**
  * Set a number of user accounts to a given state
  *
- * @param $userlist List of users to be processed
+ * @param array $userlist List of users to be processed
  * @param bool $reallydoit Execute the DB updates
  */
-function set_users_to_ost($userlist, $reallydoit = false) {
+function set_users_to_ost(array $userlist, bool $reallydoit = false) {
     global $DB, $USER;
 
     $stratresults = [];
@@ -313,7 +314,6 @@ function set_users_to_ost($userlist, $reallydoit = false) {
     foreach ($userlist as $us) {
         $olduser = $DB->get_record('user', ['id' => $us]);
         $oldusername = $olduser->username;
-        $oldusercourses = null;
         $newusercourses = null;
         $newusername = null;
         $newuser = null;
@@ -340,7 +340,7 @@ function set_users_to_ost($userlist, $reallydoit = false) {
             if ($reallydoit) {
                 $olduser->username = $newusername;
                 $olduser->description .= $updated_text;
-                $DB->update_record('user', $olduser, $bulk = false);
+                $DB->update_record('user', $olduser, false);
             }
 
             $stratresults[1]++;
@@ -354,29 +354,31 @@ function set_users_to_ost($userlist, $reallydoit = false) {
                 $newuser->email = 'migr-' . $newuser->email;
                 $newuser->firstname = 'INVALID ACCOUNT: ' . $newuser->firstname;
                 $newuser->suspended = 1;
-                $DB->update_record('user', $newuser, $bulk = false);
+                $DB->update_record('user', $newuser, false);
 
                 // Then update the old (and to be used new) user record
                 $olduser->username = $newusername;
                 $olduser->description .= $updated_text;
-                $DB->update_record('user', $olduser, $bulk = false);
+                $DB->update_record('user', $olduser, false);
             }
 
             $stratresults[2]++;
-        } else if (($oldusercourses === 0) && ($newusercourses > 0)) {
-            $result = 'Strategy 3: Deactivate old non- @ost.ch user record as no courses are linked';
-
-            if ($reallydoit) {
-                // Simply deactivate the old (and not to be used) user record
-                $olduser->suspended = 1;
-                $olduser->firstname = 'INVALID ACCOUNT: ' . $olduser->firstname;
-                $DB->update_record('user', $olduser, $bulk = false);
-            }
-
-            $stratresults[3]++;
         } else {
-            $result = 'Strategy 4: Manually merge accounts ...';
-            $stratresults[4]++;
+            if (($oldusercourses === 0) && ($newusercourses > 0)) {
+                $result = 'Strategy 3: Deactivate old non- @ost.ch user record as no courses are linked';
+
+                if ($reallydoit) {
+                    // Simply deactivate the old (and not to be used) user record
+                    $olduser->suspended = 1;
+                    $olduser->firstname = 'INVALID ACCOUNT: ' . $olduser->firstname;
+                    $DB->update_record('user', $olduser, false);
+                }
+
+                $stratresults[3]++;
+            } else {
+                $result = 'Strategy 4: Manually merge accounts ...';
+                $stratresults[4]++;
+            }
         }
 
         echo 'User ' . $oldusername . ' (' . $olduser->email . '): <br /> - ' . $result . '<br />';

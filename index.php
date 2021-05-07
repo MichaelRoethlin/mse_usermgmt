@@ -18,8 +18,8 @@
  * Displays the form and processes the form submission.
  *
  * @package    local_mse_usermgmt
- * @copyright  2015-2019 TNG Consulting Inc. - www.tngconsulting.ca
- * @author     Michael Milette
+ * @copyright  2021 BFH-TI
+ * @author     Michael Röthlin
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

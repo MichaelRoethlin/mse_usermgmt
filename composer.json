@@ -1,5 +1,5 @@
 {
-    "name": "michael-milette/moodle-local_mse_usermgmt",
+    "name": "MichaelRoethlin/moodle-local_mse_usermgmt",
     "type": "moodle-local",
     "require": {
         "composer/installers": "~1.0"
